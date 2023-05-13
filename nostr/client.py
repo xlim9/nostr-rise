@@ -7,10 +7,10 @@ from typing import Dict
 
 from websocket import WebSocketApp
 
-from .close import Close
-from .event import Event
-from .request import Request
-from .subscription import Subscription
+from .model.close import Close
+from .model.event import Event
+from .model.request import Request
+from .model.subscription import Subscription
 
 
 logging.basicConfig(level=logging.DEBUG)

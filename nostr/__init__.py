@@ -21,4 +21,4 @@
 # SOFTWARE.
 
 from .client import Client
-from .event import Event
+from .model.event import Event
