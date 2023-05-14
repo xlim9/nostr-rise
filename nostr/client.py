@@ -2,28 +2,30 @@ import ssl
 import logging
 import threading
 import time
+import uuid
 from threading import Lock
-from typing import Dict
 
 from websocket import WebSocketApp
 
 from .model.close import Close
 from .model.event import Event
 from .model.request import Request
-from .model.subscription import Subscription
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    format="%(name)s - %(levelname)s - %(message)s", level=logging.DEBUG
+)
 logger = logging.getLogger(__name__)
 
 
 class Client:
-    def __init__(self, url):
-        self.url = url
-        self.subscriptions: Dict[str, Subscription] = {}
+    def __init__(self, url: str, private_key: str):
+        self._url = url
+        self._private_key = private_key
+        self._id = str(uuid.uuid4())
         self.lock: Lock = Lock()
         self.ws: WebSocketApp = WebSocketApp(
-            self.url,
+            self._url,
             on_open=self._on_open,
             on_message=self._on_message,
             on_error=self._on_error,
@@ -31,7 +33,7 @@ class Client:
         )
 
     def open_connection(self):
-        threading.Thread(target=self._connect, name=f"{self.url}-thread").start()
+        threading.Thread(target=self._connect, name=f"{self._url}-thread").start()
         time.sleep(1)
 
     def close_connection(self):
@@ -43,26 +45,23 @@ class Client:
     def _publish(self, message: str):
         self.ws.send(message)
 
-    def add_subscription(self, id):
+    def add_subscription(self):
         with self.lock:
-            subscription = Subscription(id)
-            self.subscriptions[id] = subscription
-            request = Request(subscription)
+            request = Request(self._id)
             message = request.to_message()
             logger.debug(f"Client message: {message}")
-            self._publish(request.to_message())
+            self._publish(message)
 
-    def close_subscription(self, id: str) -> None:
+    def close_subscription(self) -> None:
         with self.lock:
-            subscription = Subscription(id)
-            close = Close(subscription)
+            close = Close(self._id)
             message = close.to_message()
             logger.debug(f"Client message: {message}")
             self._publish(message)
-            self.subscriptions.pop(id, None)
 
     def publish_event(self, event: Event):
-        message = event.to_message()
+        event.verify(private_key=self._private_key)
+        message = event.to_client_message()
         logger.debug(f"Client message: {message}")
         self._publish(message)
 
@@ -73,7 +72,7 @@ class Client:
         pass
 
     def _on_message(self, class_obj, message: str):
-        pass
+        logger.info(f"Message received: {message}")
 
     def _on_error(self, class_obj, error):
-        pass
+        logger.error(f"Client error: {error}")

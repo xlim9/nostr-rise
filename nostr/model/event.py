@@ -3,10 +3,10 @@ import json
 import secp256k1
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import List
+from typing import List, Optional
 from hashlib import sha256
 
-from .message_type import ClientMessageType
+from .message_type import ClientMessageType, RelayMessageType
 
 
 class EventKind(IntEnum):
@@ -18,14 +18,14 @@ class EventKind(IntEnum):
 @dataclass
 class Event:
     content: str
-    private_key: str
     public_key: str
     created_at: int = int(time.time())
     kind: int = EventKind.TEXT_NOTE
     tags: List[List[str]] = field(default_factory=list)
+    signature: Optional[str] = None
 
-    def __post_init__(self):
-        sk = secp256k1.PrivateKey(bytes.fromhex(self.private_key))
+    def verify(self, private_key: str):
+        sk = secp256k1.PrivateKey(bytes.fromhex(private_key))
         sig = sk.schnorr_sign(bytes.fromhex(self.id), None, raw=True)
         self.signature = sig.hex()
 
@@ -51,7 +51,7 @@ class Event:
             self.public_key, self.created_at, self.kind, self.tags, self.content
         )
 
-    def to_message(self) -> str:
+    def to_client_message(self) -> str:
         return json.dumps(
             [
                 ClientMessageType.EVENT,
@@ -65,4 +65,34 @@ class Event:
                     "sig": self.signature,
                 },
             ]
+        )
+
+    def to_relay_message(self, subscription_id: str) -> str:
+        return json.dumps(
+            [
+                RelayMessageType.EVENT,
+                subscription_id,
+                {
+                    "id": self.id,
+                    "pubkey": self.public_key,
+                    "created_at": self.created_at,
+                    "kind": self.kind,
+                    "tags": self.tags,
+                    "content": self.content,
+                    "sig": self.signature,
+                },
+            ]
+        )
+
+    @classmethod
+    def from_client_message(cls, message: str):
+        parsed = json.loads(message)
+        event_json = parsed[1]
+        return cls(
+            content=event_json["content"],
+            public_key=event_json["pubkey"],
+            created_at=event_json["created_at"],
+            kind=event_json["kind"],
+            tags=event_json["tags"],
+            signature=event_json["sig"],
         )
