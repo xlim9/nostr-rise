@@ -24,10 +24,16 @@ class Event:
     tags: List[List[str]] = field(default_factory=list)
     signature: Optional[str] = None
 
-    def verify(self, private_key: str):
+    def sign(self, private_key: str):
         sk = secp256k1.PrivateKey(bytes.fromhex(private_key))
         sig = sk.schnorr_sign(bytes.fromhex(self.id), None, raw=True)
         self.signature = sig.hex()
+
+    def verify(self):
+        sk = secp256k1.PublicKey(bytes.fromhex("02" + self.public_key), True)
+        return sk.schnorr_verify(
+            bytes.fromhex(self.id), bytes.fromhex(self.signature), None, raw=True
+        )
 
     @staticmethod
     def serialize(

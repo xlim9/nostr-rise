@@ -21,9 +21,14 @@ async def watcher() -> None:
     async with websockets.connect(WS_LOCALHOST) as websocket:
         client = Client(websocket, private_key=PRIVATE_KEY)
         await client.add_subscription(SUBSCRIPTION_ID)
-        while True:
-            message = await client.receive()
-            logger.info(f"Message received: {message}")
+        logger.info(f"Subscription added | subscription_id: {SUBSCRIPTION_ID}")
+        try:
+            while True:
+                message = await client.receive()
+                logger.info(f"Message received | message: {message}")
+        except:
+            await client.close_subscription(SUBSCRIPTION_ID)
+            logger.info(f"Subscription closed | subscription_id: {SUBSCRIPTION_ID}")
 
 
 if __name__ == "__main__":

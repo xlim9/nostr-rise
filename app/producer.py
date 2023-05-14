@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 import websockets
-from nostr import Client, Event
+from nostr import Client
 
 WS_LOCALHOST = "ws://0.0.0.0:8001"
 PRIVATE_KEY = "ca52acacfbfbf9f040de69361a2c1ea78b705399ce909d4a5a87e7bc029cead7"
@@ -15,13 +15,9 @@ logger = logging.getLogger("PRODUCER CLIENT")
 
 async def producer() -> None:
     async with websockets.connect(WS_LOCALHOST) as websocket:
-        client = Client(websocket, private_key=PRIVATE_KEY)
-        event = Event(
-            content="hello",
-            kind=1,
-            public_key=PUBLIC_KEY,
-        )
-        await client.publish_event(event)
+        client = Client(websocket, private_key=PRIVATE_KEY, public_key=PUBLIC_KEY)
+        message = await client.publish_event(content="hello")
+        logger.info(f"Message sent | event: {message}")
         await asyncio.sleep(5)
 
 

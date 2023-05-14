@@ -38,6 +38,7 @@ class Relay:
         message_type = self._parse_message_type(message)
         if message_type == ClientMessageType.EVENT:
             event = Event.from_client_message(message)
+            event.verify()
             await self._db.add(event)
             await self._subscriptions.broadcast(event)
         elif message_type == ClientMessageType.REQUEST:
@@ -49,5 +50,6 @@ class Relay:
             self._subscriptions.subscribe(id=request.id, client_session=client_session)
         elif message_type == ClientMessageType.CLOSE:
             self._subscriptions.unsubscribe(id=request.id)
+            client_session.close()
         else:
             raise TypeError(f"Message type {message_type} is not supported")

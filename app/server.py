@@ -16,19 +16,15 @@ relay = Relay()
 
 async def handler(websocket) -> None:
     client_session = ClientSession(websocket)
-    logger.info(f"New connection | conn_id: {client_session.id}")
+    logger.info(f"Connection added | connection_id: {client_session.id}")
     try:
         while True:
             message = await websocket.recv()
-            logger.info(
-                f"New message from connection | conn_id: {client_session.id} | message: {message}"
-            )
+            logger.info(f"Message received | connection_id: {client_session.id} | message: {message}")
             await relay.handle(client_session, message)
     except:
-        logger.error(f"Connection error | conn_id: {client_session.id}", exc_info=True)
-    finally:
-        logger.info(f"Connection closed | conn_id: {client_session.id}")
         client_session.close()
+        logger.info(f"Connection closed | connection_id: {client_session.id}")
 
 
 if __name__ == "__main__":
