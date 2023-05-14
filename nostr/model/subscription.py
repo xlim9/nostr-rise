@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from collections import UserDict
 
 from ..session import ClientSession
-from .event import Event
+from .message import Event
 
 
 @dataclass

@@ -96,3 +96,31 @@ class Event:
             tags=event_json["tags"],
             signature=event_json["sig"],
         )
+
+
+@dataclass
+class Request:
+    id: str
+
+    def to_message(self) -> str:
+        message = [ClientMessageType.REQUEST, self.id]
+        return json.dumps(message)
+
+    @classmethod
+    def from_message(cls, message: str):
+        parsed = json.loads(message)
+        return cls(parsed[1])
+
+
+@dataclass
+class Close:
+    id: str
+
+    def to_message(self) -> str:
+        message = [ClientMessageType.CLOSE, self.id]
+        return json.dumps(message)
+
+    @classmethod
+    def from_message(cls, message: str):
+        parsed = json.loads(message)
+        return cls(parsed[1])

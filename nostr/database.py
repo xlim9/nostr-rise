@@ -1,6 +1,6 @@
 import logging
 from typing import Collection, Dict
-from .model.event import Event
+from .model import Event
 
 
 logging.basicConfig(

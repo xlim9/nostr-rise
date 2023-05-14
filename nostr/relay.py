@@ -1,12 +1,8 @@
 import json
 import logging
 from typing import Collection
-from .model.event import Event
-from .model.request import Request
-from .model.close import Close
-from .model.message_type import ClientMessageType
+from .model import ClientMessageType, Event, Request, Subscriptions
 from .database import Database, InMemoryDatabase
-from .model.subscription import Subscriptions
 from .session import ClientSession
 
 

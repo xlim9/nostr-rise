@@ -10,7 +10,7 @@ from nostr import ClientSession
 logging.basicConfig(
     format="%(name)s - %(levelname)s - %(message)s", level=logging.DEBUG
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("RELAY SERVER")
 relay = Relay()
 
 
