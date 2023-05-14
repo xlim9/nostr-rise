@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import os
+import signal
 
 import websockets
 
@@ -20,15 +22,23 @@ async def handler(websocket) -> None:
     try:
         while True:
             message = await websocket.recv()
-            logger.info(f"Message received | connection_id: {client_session.id} | message: {message}")
+            logger.info(
+                f"Message received | connection_id: {client_session.id} | message: {message}"
+            )
             await relay.handle(client_session, message)
     except:
         client_session.close()
         logger.info(f"Connection closed | connection_id: {client_session.id}")
 
 
+async def main():
+    loop = asyncio.get_running_loop()
+    stop = loop.create_future()
+    loop.add_signal_handler(signal.SIGTERM, stop.set_result, None)
+
+    async with websockets.serve(handler, host="", port=int(os.environ["PORT"])):
+        await stop
+
+
 if __name__ == "__main__":
-    event_loop = asyncio.get_event_loop()
-    start_websocket_server = websockets.serve(handler, "", 8001)
-    event_loop.run_until_complete(start_websocket_server)
-    event_loop.run_forever()
+    asyncio.run(main())
