@@ -21,4 +21,6 @@
 # SOFTWARE.
 
 from .client import Client
-from .event import Event
+from .model import Event
+from .relay import Relay
+from .session import ClientSession

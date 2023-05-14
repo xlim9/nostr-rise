@@ -1,79 +1,40 @@
-import ssl
 import logging
-import threading
-import time
-from threading import Lock
-from typing import Dict
-
-from websocket import WebSocketApp
-
-from .close import Close
-from .event import Event
-from .request import Request
-from .subscription import Subscription
+import uuid
+from .model import Close, Event, Request
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    format="%(name)s - %(levelname)s - %(message)s", level=logging.DEBUG
+)
 logger = logging.getLogger(__name__)
 
 
 class Client:
-    def __init__(self, url):
-        self.url = url
-        self.subscriptions: Dict[str, Subscription] = {}
-        self.lock: Lock = Lock()
-        self.ws: WebSocketApp = WebSocketApp(
-            self.url,
-            on_open=self._on_open,
-            on_message=self._on_message,
-            on_error=self._on_error,
-            on_close=self._on_close,
-        )
+    def __init__(self, websocket, private_key: str, public_key: str) -> None:
+        self.websocket = websocket
+        self._private_key = private_key
+        self._public_key = public_key
+        self._id = str(uuid.uuid4())
 
-    def open_connection(self):
-        threading.Thread(target=self._connect, name=f"{self.url}-thread").start()
-        time.sleep(1)
+    async def publish_event(self, content: str, kind: int = 1) -> str:
+        event = Event(content=content, kind=kind, public_key=self._public_key)
+        event.sign(private_key=self._private_key)
+        message = event.to_client_message()
+        await self.websocket.send(message)
+        return message
 
-    def close_connection(self):
-        self.ws.close()
+    async def close_subscription(self, subscription_id: str) -> None:
+        close = Close(subscription_id)
+        message = close.to_message()
+        await self.websocket.send(message)
+        logger.info(f"Message sent: {message}")
 
-    def _connect(self):
-        self.ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+    async def add_subscription(self, subscription_id: str) -> None:
+        request = Request(subscription_id)
+        message = request.to_message()
+        await self.websocket.send(message)
+        logger.info(f"Message sent: {message}")
 
-    def _publish(self, message: str):
-        self.ws.send(message)
-
-    def add_subscription(self, id):
-        with self.lock:
-            subscription = Subscription(id)
-            self.subscriptions[id] = subscription
-            request = Request(subscription)
-            message = request.to_message()
-            logger.debug(f"Client message: {message}")
-            self._publish(request.to_message())
-
-    def close_subscription(self, id: str) -> None:
-        with self.lock:
-            subscription = Subscription(id)
-            close = Close(subscription)
-            message = close.to_message()
-            logger.debug(f"Client message: {message}")
-            self._publish(message)
-            self.subscriptions.pop(id, None)
-
-    def publish_event(self, event: Event):
-        message = event.to_message()
-        logger.debug(f"Client message: {message}")
-        self._publish(message)
-
-    def _on_open(self, class_obj):
-        pass
-
-    def _on_close(self, class_obj, status_code, message):
-        pass
-
-    def _on_message(self, class_obj, message: str):
-        pass
-
-    def _on_error(self, class_obj, error):
-        pass
+    async def receive(self) -> str:
+        message = await self.websocket.recv()
+        return message
