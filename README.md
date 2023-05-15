@@ -19,3 +19,17 @@ What are some of the challenges you faced while working on Phase 1?
 
 What kind of failures do you expect to a project such as DISTRISE to encounter?
 - DISTRISE may not be able to guarantee consistency when fetching the "latest" state of updates from users
+
+
+## Phase 2 Q&A
+
+Deployment of relay server
+- URL: `wss://nostr-rise.herokuapp.com/`
+- To send an event: `python -m app.producer`
+- To watch events: `python -m app.watcher`
+
+Why did you choose this database?
+- I chose SQLite because it is easy to start with a local database.
+
+If the number of events to be stored will be huge, what would you do to scale the database?
+- To scale it, I would deploy a PostgreSQL database on the cloud with streaming replication.
