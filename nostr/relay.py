@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Collection
 from .model import ClientMessageType, Event, Request, Subscriptions
-from .database import Database, InMemoryDatabase
+from .database import Database, SQLiteDatabase
 from .session import ClientSession
 
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Relay:
     def __init__(self):
-        self._db: Database = InMemoryDatabase()
+        self._db: Database = SQLiteDatabase()
         self._subscriptions: Subscriptions = Subscriptions()
 
     def _parse_message_type(self, message: str) -> ClientMessageType:
