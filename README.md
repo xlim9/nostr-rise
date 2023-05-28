@@ -32,4 +32,22 @@ Why did you choose this database?
 - I chose SQLite because it is easy to start with a local database.
 
 If the number of events to be stored will be huge, what would you do to scale the database?
-- To scale it, I would deploy a PostgreSQL database on the cloud with streaming replication.
+- To scale it, I would deploy a PostgreSQL database on the cloud with streaming replication and sharding.
+
+
+## Phase 3, 4 Q&A
+
+Deployment of event aggregator
+- To start aggregator locally: `python -m app.aggregator`
+
+Why did you choose this database?
+- I chose SQLite because it is easy to start with a local database.
+
+If the number of events to be stored will be huge, what would you do to scale the database?
+- To scale it, I would deploy a PostgreSQL database on the cloud with streaming replication and sharding.
+
+Why did you choose this queue system?
+- I chose RabbitMQ to experiment with a queue system that we learnt in class.
+
+If the number of events to be stored will be huge, what would you do to scale the queue system?
+- I will use clustering in RabbitMQ and split the queue into multiple queues that will then be distributed in the cluster to increase throughput.

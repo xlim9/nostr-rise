@@ -102,6 +102,19 @@ class Event:
             tags=event_json["tags"],
             signature=event_json["sig"],
         )
+    
+    @classmethod
+    def from_relay_message(cls, message: str):
+        parsed = json.loads(message)
+        event_json = parsed[2]
+        return cls(
+            content=event_json["content"],
+            public_key=event_json["pubkey"],
+            created_at=event_json["created_at"],
+            kind=event_json["kind"],
+            tags=event_json["tags"],
+            signature=event_json["sig"],
+        )
 
 
 @dataclass

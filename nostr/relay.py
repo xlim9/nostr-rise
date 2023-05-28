@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Relay:
     def __init__(self):
-        self._db: Database = SQLiteDatabase()
+        self._db: Database = SQLiteDatabase("relay.db")
         self._subscriptions: Subscriptions = Subscriptions()
 
     def _parse_message_type(self, message: str) -> ClientMessageType:
