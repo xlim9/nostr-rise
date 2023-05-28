@@ -20,7 +20,7 @@ class Database:
         pass
 
 
-class InMemoryDatabase:
+class InMemoryDatabase(Database):
     def __init__(self):
         self._database: Dict[str, Event] = {}
 
@@ -31,23 +31,25 @@ class InMemoryDatabase:
         return list(self._database.values())
 
 
-class SQLiteDatabase:
-    def __init__(self):
-        database = sqlite3.connect("test.db")
+class SQLiteDatabase(Database):
+    def __init__(self, db_name: str):
+        self.db_name = db_name
+        database = sqlite3.connect(self.db_name)
         database.execute("CREATE TABLE IF NOT EXISTS events (id TEXT, message TEXT)")
         database.close()
 
     async def add(self, event: Event) -> None:
         id = event.id
         message = event.to_client_message()
+        message = message.replace("'", "''")
         query = f"INSERT INTO events(id, message) VALUES ('{id}', '{message}')"
-        db = await aiosqlite.connect("test.db")
+        db = await aiosqlite.connect(self.db_name)
         await db.execute(query)
         await db.commit()
         await db.close()
 
     async def query(self) -> Collection[Event]:
-        db = await aiosqlite.connect("test.db")
+        db = await aiosqlite.connect(self.db_name)
         results = []
         async with db.execute("SELECT message FROM events") as cursor:
             async for row in cursor:
