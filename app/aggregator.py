@@ -51,7 +51,7 @@ async def aggregator(HOST) -> None:
             logger.info(f"Subscription closed | subscription_id: {SUBSCRIPTION_ID}")
 
 
-async def consume() -> None:
+async def consumer() -> None:
     logging.basicConfig(level=logging.INFO)
     queue_connection = await aio_pika.connect_robust(
         "amqp://guest:guest@127.0.0.1/",
@@ -72,11 +72,17 @@ async def consume() -> None:
                         await db.add(event)
                         logger.info(f"Message saved to database | message: {message}")
 
+
+async def events():
+    events = await db.query()
+    logger.info(f"Events in database: {events}")
+
+
 async def main():
     await asyncio.gather(
         aggregator("wss://nostr-rise.herokuapp.com/"),
         aggregator("wss://relay.nekolicio.us/"),
-        consume(),
+        consumer(),
     )
 
 
